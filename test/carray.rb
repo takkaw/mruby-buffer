@@ -1,21 +1,12 @@
 assert("CArray#new") do
+  assert_raise { CArray.new 100 }
   assert_nothing_raised { CArray::Float.new 100 }
-  assert_nothing_raised { CArray::Float.new [2,3,4] }
+  assert_nothing_raised { CArray::Float.new [1,2,3] }
 
   assert_nothing_raised {
-    10000.times { CArray.new CArray::FLOAT, 100 }
+    10000.times { CArray::Float.new 100 }
   }
 
-  assert_nothing_raised { CArray.new CArray::UINT8,  [1,2,3] }
-  assert_nothing_raised { CArray.new CArray::INT8,   [1,2,3] }
-  assert_nothing_raised { CArray.new CArray::UINT16, [1,2,3] }
-  assert_nothing_raised { CArray.new CArray::INT16,  [1,2,3] }
-  assert_nothing_raised { CArray.new CArray::UINT32, [1,2,3] }
-  assert_nothing_raised { CArray.new CArray::INT32,  [1,2,3] }
-  assert_nothing_raised { CArray.new CArray::UINT64, [1,2,3] }
-  assert_nothing_raised { CArray.new CArray::INT64,  [1,2,3] }
-  assert_nothing_raised { CArray.new CArray::FLOAT,  [1,2,3] }
-  assert_nothing_raised { CArray.new CArray::DOUBLE, [1,2,3] }
   assert_nothing_raised { CArray::Uint8.new  [1,2,3] }
   assert_nothing_raised { CArray::Int8.new   [1,2,3] }
   assert_nothing_raised { CArray::Uint16.new [1,2,3] }
@@ -32,14 +23,9 @@ assert("CArray#inspect") do
   assert_kind_of String, carray.inspect
 end
 
-assert("CArray#type") do
-  carray = CArray::Float.new 100
-  assert_equal :FLOAT, carray.type
-end
-
 assert("CArray#type_no") do
   carray = CArray::Float.new 100
-  assert_equal CArray::FLOAT, carray.type_no
+  assert_equal CArray::TYPE.find_index(carray.class), carray.type_no
 end
 
 assert("CArray#dim") do
