@@ -227,7 +227,7 @@ do { \
   } \
 } while(0)
 
-static void mrb_carry_set_val_each_type(mrb_state *mrb, uint8_t *data, uint32_t type, mrb_value val)
+static void mrb_carray_set_val_each_type(mrb_state *mrb, uint8_t *data, uint32_t type, mrb_value val)
 {
   switch(type) {
     case ca_type_uint8:    mrb_carray_set_val(data, uint8_t,  val); break;
@@ -261,7 +261,7 @@ mrb_carray_set_value(mrb_state *mrb, mrb_value self)
     mrb_raise(mrb, E_ARGUMENT_ERROR, "argument must be Fixnum or Float");
   }
 
-  mrb_carry_set_val_each_type(mrb, data, type, *mrb_elm);
+  mrb_carray_set_val_each_type(mrb, data, type, *mrb_elm);
 
   return *mrb_elm; 
 }
@@ -280,7 +280,7 @@ mrb_carray_fill_value(mrb_state *mrb, mrb_value self)
   size = ((mrb_carray *)DATA_PTR(self))->size;
   
   for(i = 0; i < size; i++){
-    mrb_carry_set_val_each_type(mrb, data, type, mrb_val);
+    mrb_carray_set_val_each_type(mrb, data, type, mrb_val);
     data += carray_type_size[type];
   }
 
