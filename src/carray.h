@@ -7,8 +7,7 @@ typedef struct {
 } mrb_carray;
 
 enum carray_type {
-  ca_type_none = -1,
-  ca_type_uint8,
+  ca_type_uint8 = 0,
   ca_type_int8,
   ca_type_uint16,
   ca_type_int16_t,
