@@ -40,6 +40,10 @@ mrb_mem_alloc(mrb_state *mrb, mrb_value self)
   uint32_t *shape_ptr;
   mrb_int i;
 
+  if(DATA_TYPE(self) == &mrb_mem_type) {
+    mrb_raise(mrb, E_RUNTIME_ERROR, "already allocated");
+  }
+
   mem = mrb_malloc(mrb, sizeof(mrb_mem));
   mem->shape = NULL;
   mem->data = NULL;

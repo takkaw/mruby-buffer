@@ -91,3 +91,8 @@ assert("Mem#dup") do
   assert_equal mem.shape,   mem2.shape
 end
 
+assert("Mem#alloc") do
+  mem = Mem::Int32.new [0,1,2]
+  assert_raise { mem.alloc }
+end
+
