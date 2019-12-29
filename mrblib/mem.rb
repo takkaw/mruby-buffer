@@ -19,7 +19,12 @@ class Mem
   }
 
   def initialize(shape)
-    raise StandardError, "Cannot create an instance, only can create Mem sub class(Mem::TYPE) instance" unless TYPE.include? self.class
+    type = nil
+    TYPE.each { |t|
+      type = t if (self.class <= t)
+    }
+    raise StandardError, "Cannot create an instance, only can create Mem sub class(Mem::TYPE) instance" unless type
+    
     case shape
     when Integer
       shape = [shape]
@@ -28,7 +33,7 @@ class Mem
     else
       raise ArgumentError, "invalid shape"
     end
-    alloc(Mem::TYPE.find_index(self.class),shape)
+    alloc(Mem::TYPE.find_index(type),shape)
   end
 
   def inspect
