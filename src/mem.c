@@ -226,7 +226,7 @@ mrb_mem_get_value(mrb_state *mrb, mrb_value self)
     case mem_type_float:    return mrb_float_value( mrb, *(float *)data );
     case mem_type_double:   return mrb_float_value( mrb, *(double *)data );
 #endif
-    default:               mrb_raise(mrb, E_ARGUMENT_ERROR, "unexpacted type");
+    default:                mrb_raisef(mrb, E_ARGUMENT_ERROR, "unexpected type %d at get", type);
   }
 }
 
@@ -264,7 +264,7 @@ static void mrb_mem_set_val_each_type(mrb_state *mrb, uint8_t *data, uint32_t ty
     case mem_type_float:    mrb_mem_set_val(data, float,    val); break;
     case mem_type_double:   mrb_mem_set_val(data, double,   val); break;
 #endif
-    default:               mrb_raise(mrb, E_ARGUMENT_ERROR, "unexpacted type");
+    default:                mrb_raisef(mrb, E_ARGUMENT_ERROR, "unexpected type %d at set", type);
   }
 }
 
