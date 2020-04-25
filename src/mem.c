@@ -235,21 +235,13 @@ mrb_mem_get_value(mrb_state *mrb, mrb_value self)
 }
 
 #ifndef MRB_WITHOUT_FLOAT
-#define mrb_mem_set_val(data,type,val) \
-do { \
-  if( mrb_fixnum_p(val) ) { \
-    *(type *)data = mrb_fixnum(val); \
-  } \
-  else if( mrb_float_p(val) ){ \
-    *(type *)data = mrb_float(val); \
-  } \
+#define mrb_mem_set_val(data,type,val) do { \
+  if( mrb_fixnum_p(val) ) *(type *)data = mrb_fixnum(val); else \
+  if( mrb_float_p(val) )  *(type *)data = mrb_float(val);  \
 } while(0)
 #else
-#define mrb_mem_set_val(data,type,val) \
-do { \
-  if( mrb_fixnum_p(val) ) { \
-    *(type *)data = mrb_fixnum(val); \
-  } \
+#define mrb_mem_set_val(data,type,val) do { \
+  if( mrb_fixnum_p(val) ) *(type *)data = mrb_fixnum(val); \
 } while(0)
 #endif
 
