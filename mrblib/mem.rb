@@ -15,7 +15,7 @@ class Mem
   end
 
   type.each { |klass|
-    TYPE << Mem.const_set(klass, Class.new(Mem) { def initialize(shape); super shape; end })
+    TYPE << Mem.const_set(klass, Class.new(Mem))
   }
 
   def initialize(shape)
