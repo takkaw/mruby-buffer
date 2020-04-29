@@ -74,12 +74,6 @@ mrb_mem_alloc(mrb_state *mrb, mrb_value self)
 
   mem->data = mrb_malloc(mrb, mem->size * mem_type_size[mem->type]);
 
-#if 0
-  for( i = 0; i < (length * channel); i++ ){
-    ab->data[i] = 0;
-  }
-#endif
-
   return self;
 }
 
