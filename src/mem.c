@@ -31,50 +31,76 @@ mrb_mem_support_float(mrb_state *mrb, mrb_value self)
 #endif
 }
 
-MRB_API mrb_value
-mrb_mem_alloc(mrb_state *mrb, mrb_value self)
+mrb_value
+mrb_mem_alloc(mrb_state *mrb, mrb_value self, mrb_int type_no, mrb_value mrb_shape, mrb_int dim)
 {
   mrb_mem *mem;
-  mrb_value *mrb_shape;
-  mrb_value mrb_type_no;
-  uint32_t *shape_ptr;
   mrb_int i;
-
-  if(DATA_TYPE(self) == &mrb_mem_type) {
-    mrb_raise(mrb, E_RUNTIME_ERROR, "already allocated");
-  }
 
   mem = mrb_malloc(mrb, sizeof(mrb_mem));
   mem->shape = NULL;
   mem->data = NULL;
+  mem->dim = dim;
+  mem->type = type_no;
 
   DATA_TYPE(self) = &mrb_mem_type;
   DATA_PTR(self) = mem;
 
-  mrb_get_args(mrb, "oa", &mrb_type_no, &mrb_shape, &mem->dim);
-
-  if( mrb_fixnum_p(mrb_type_no) ){
-    mem->type = mrb_fixnum(mrb_type_no);
-  }
-  else{
-  }
-
   mem->shape = mrb_malloc(mrb, sizeof(uint32_t) * mem->dim);
   mem->size = 1;
-  shape_ptr = mem->shape;
   
   for( i = 0; i < mem->dim; i++ ) {
-    if( mrb_fixnum_p(*mrb_shape) ) {
-      *shape_ptr = mrb_fixnum(*mrb_shape);
-    }
-    mem->size *= *shape_ptr;
-    shape_ptr++;
-    mrb_shape++;
+    mem->shape[i] = mrb_fixnum(mrb_ary_ref(mrb, mrb_shape, i));
+    mem->size *= mem->shape[i];
   }
 
   mem->data = mrb_malloc(mrb, mem->size * mem_type_size[mem->type]);
 
   return self;
+}
+
+MRB_API mrb_value
+mrb_mem_initialize(mrb_state *mrb, mrb_value self)
+{
+  mrb_value mrb_arg, mrb_shape, shape_val;
+  mrb_int shape_len, type_no, i;
+  const char* class_name;
+
+  class_name = mrb_obj_classname(mrb, self);
+
+  mrb_int class_num = sizeof(sub_class_list) / sizeof(sub_class_list[0]);
+  for( type_no = 0; type_no < class_num; type_no++) {
+    if( strcmp(class_name + strlen("Mem::"), sub_class_list[type_no]) == 0 ){
+      break;
+    }
+  }
+
+  if( type_no >= class_num ) {
+    mrb_raise(mrb, mrb_exc_get(mrb, "StandardError"), "Cannot create an instance, only can create Mem sub class instance");
+  }
+
+  mrb_get_args(mrb, "o", &mrb_arg);
+
+  if( mrb_fixnum_p(mrb_arg) ){
+    shape_len = 1;
+    mrb_shape = mrb_ary_new_capa(mrb, 1);
+    mrb_ary_set(mrb, mrb_shape, 0, mrb_arg);
+  }
+  else if( mrb_array_p(mrb_arg) ) {
+    mrb_shape = mrb_arg;
+    shape_len = RARRAY_LEN(mrb_shape);
+    for( i = 0; i < shape_len; i++) {
+      shape_val = mrb_ary_ref(mrb, mrb_shape, i);
+      if( !mrb_fixnum_p( shape_val ) ) {
+        mrb_raisef( mrb, E_ARGUMENT_ERROR, "invalid shape");
+      }
+    }
+  }
+  else {
+    mrb_raisef( mrb, E_ARGUMENT_ERROR, "invalid shape");
+  }
+
+  return mrb_mem_alloc(mrb, self, type_no, mrb_shape, shape_len);
 }
 
 MRB_API mrb_value
@@ -309,16 +335,18 @@ mrb_mem_fill_value(mrb_state *mrb, mrb_value self)
 
 void mrb_mruby_mem_gem_init(mrb_state *mrb)
 {
+  mrb_int i;
+  mrb_int class_num = sizeof(sub_class_list) / sizeof(sub_class_list[0]);
+
   struct RClass *cls = mrb_define_class(mrb, "Mem", mrb->object_class);
 
   mrb_define_class_method(mrb, cls, "support_float?", mrb_mem_support_float, MRB_ARGS_NONE());
 
   MRB_SET_INSTANCE_TT(cls, MRB_TT_DATA);
 
-  mrb_define_method(mrb, cls, "alloc", mrb_mem_alloc, MRB_ARGS_REQ(2));
+  mrb_define_method(mrb, cls, "initialize", mrb_mem_initialize, MRB_ARGS_REQ(1));
   mrb_define_method(mrb, cls, "initialize_copy", mrb_mem_init_copy, MRB_ARGS_REQ(1));
 
-  mrb_define_method(mrb, cls, "type_no", mrb_mem_get_type_no, MRB_ARGS_NONE());
   mrb_define_method(mrb, cls, "dim", mrb_mem_get_dim, MRB_ARGS_NONE());
   mrb_define_method(mrb, cls, "size", mrb_mem_get_size, MRB_ARGS_NONE());
   mrb_define_method(mrb, cls, "shape", mrb_mem_get_shape, MRB_ARGS_NONE());
@@ -326,6 +354,10 @@ void mrb_mruby_mem_gem_init(mrb_state *mrb)
   mrb_define_method(mrb, cls, "fill", mrb_mem_fill_value, MRB_ARGS_REQ(1));
   mrb_define_method(mrb, cls, "[]", mrb_mem_get_value, MRB_ARGS_ANY());
   mrb_define_method(mrb, cls, "[]=", mrb_mem_set_value, MRB_ARGS_ANY());
+
+  for( i = 0; i < class_num; i++) {
+    mrb_define_class_under(mrb, cls, sub_class_list[i], cls);
+  }
 }
 
 void mrb_mruby_mem_gem_final(mrb_state *mrb)

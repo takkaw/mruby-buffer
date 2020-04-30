@@ -6,6 +6,21 @@ typedef struct {
   uint8_t *data;
 } mrb_mem;
 
+static const char *sub_class_list[] = {
+  "Uint8",
+  "Int8",
+  "Uint16",
+  "Int16",
+  "Uint32",
+  "Int32",
+  "Uint64",
+  "Int64",
+#ifndef MRB_WITHOUT_FLOAT
+  "Float",
+  "Double",
+#endif
+};
+
 enum mem_type {
   mem_type_uint8 = 0,
   mem_type_int8,
@@ -15,8 +30,10 @@ enum mem_type {
   mem_type_int32_t,
   mem_type_uint64_t,
   mem_type_int64_t,
+#ifndef MRB_WITHOUT_FLOAT
   mem_type_float,
-  mem_type_double
+  mem_type_double,
+#endif
 };
 
 uint8_t mem_type_size[] = {
@@ -28,6 +45,9 @@ uint8_t mem_type_size[] = {
   sizeof(int32_t),
   sizeof(uint64_t),
   sizeof(int64_t),
+#ifndef MRB_WITHOUT_FLOAT
   sizeof(float),
-  sizeof(double)
+  sizeof(double),
+#endif
 };
+

@@ -24,11 +24,6 @@ assert("Mem#inspect") do
   assert_kind_of String, mem.inspect
 end
 
-assert("Mem#type_no") do
-  mem = Mem::Int32.new 100
-  assert_equal Mem::TYPE.find_index(mem.class), mem.type_no
-end
-
 assert("Mem#dim") do
   mem = Mem::Int32.new [1,2,3]
   assert_equal 3, mem.dim
@@ -85,14 +80,10 @@ assert("Mem#dup") do
 
   mem2 = mem.dup
   assert_equal mem[0,1,2],  mem2[0,1,2]
-  assert_equal mem.type_no, mem2.type_no
   assert_equal mem.dim,     mem2.dim
   assert_equal mem.size,    mem2.size
   assert_equal mem.shape,   mem2.shape
-end
-
-assert("Mem#alloc") do
-  mem = Mem::Int32.new [0,1,2]
-  assert_raise { mem.alloc }
+  assert_equal mem.class,   mem2.class
+  assert_not_equal mem.object_id, mem2.object_id
 end
 
