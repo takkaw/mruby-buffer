@@ -68,9 +68,9 @@ mrb_buffer_initialize(mrb_state *mrb, mrb_value self)
 
   class_name = mrb_obj_classname(mrb, self);
 
-  mrb_int class_num = sizeof(sub_class_list) / sizeof(sub_class_list[0]);
+  mrb_int class_num = sizeof(buffer_sub_class_list) / sizeof(buffer_sub_class_list[0]);
   for( type_no = 0; type_no < class_num; type_no++) {
-    if( strcmp(class_name + strlen("Buffer::"), sub_class_list[type_no]) == 0 ){
+    if( strcmp(class_name + strlen("Buffer::"), buffer_sub_class_list[type_no]) == 0 ){
       break;
     }
   }
@@ -336,7 +336,7 @@ mrb_buffer_fill_value(mrb_state *mrb, mrb_value self)
 void mrb_mruby_buffer_gem_init(mrb_state *mrb)
 {
   mrb_int i;
-  mrb_int class_num = sizeof(sub_class_list) / sizeof(sub_class_list[0]);
+  mrb_int class_num = sizeof(buffer_sub_class_list) / sizeof(buffer_sub_class_list[0]);
 
   struct RClass *cls = mrb_define_class(mrb, "Buffer", mrb->object_class);
 
@@ -356,7 +356,7 @@ void mrb_mruby_buffer_gem_init(mrb_state *mrb)
   mrb_define_method(mrb, cls, "[]=", mrb_buffer_set_value, MRB_ARGS_ANY());
 
   for( i = 0; i < class_num; i++) {
-    mrb_define_class_under(mrb, cls, sub_class_list[i], cls);
+    mrb_define_class_under(mrb, cls, buffer_sub_class_list[i], cls);
   }
 }
 
