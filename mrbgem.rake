@@ -1,5 +1,5 @@
-MRuby::Gem::Specification.new('mruby-mem') do |spec|
+MRuby::Gem::Specification.new('mruby-buffer') do |spec|
   spec.license = 'MIT'
   spec.author  = 'takkaw'
-  spec.summary = 'fix type and fix size memroy allocator'
+  spec.summary = 'fixed type and size memory buffer'
 end

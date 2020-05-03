@@ -4,7 +4,7 @@ typedef struct {
   uint32_t *shape;
   uint32_t size;
   uint8_t *data;
-} mrb_mem;
+} mrb_buffer;
 
 static const char *sub_class_list[] = {
   "Uint8",
@@ -21,22 +21,22 @@ static const char *sub_class_list[] = {
 #endif
 };
 
-enum mem_type {
-  mem_type_uint8 = 0,
-  mem_type_int8,
-  mem_type_uint16,
-  mem_type_int16_t,
-  mem_type_uint32_t,
-  mem_type_int32_t,
-  mem_type_uint64_t,
-  mem_type_int64_t,
+enum buffer_type {
+  buffer_type_uint8 = 0,
+  buffer_type_int8,
+  buffer_type_uint16,
+  buffer_type_int16_t,
+  buffer_type_uint32_t,
+  buffer_type_int32_t,
+  buffer_type_uint64_t,
+  buffer_type_int64_t,
 #ifndef MRB_WITHOUT_FLOAT
-  mem_type_float,
-  mem_type_double,
+  buffer_type_float,
+  buffer_type_double,
 #endif
 };
 
-uint8_t mem_type_size[] = {
+uint8_t buffer_type_size[] = {
   sizeof(uint8_t),
   sizeof(int8_t),
   sizeof(uint16_t),

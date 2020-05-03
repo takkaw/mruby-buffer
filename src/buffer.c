@@ -6,23 +6,23 @@
 #include <mruby/array.h>
 #include <mruby/string.h>
 
-#include "mem.h"
+#include "buffer.h"
 #include "string.h"
 
-static void mrb_mem_free(mrb_state *mrb, void *ptr)
+static void mrb_buffer_free(mrb_state *mrb, void *ptr)
 {
-  mrb_mem *mem = ptr;
-  mrb_free(mrb, mem->shape);
-  mrb_free(mrb, mem->data);
-  mrb_free(mrb, mem);
+  mrb_buffer *buffer = ptr;
+  mrb_free(mrb, buffer->shape);
+  mrb_free(mrb, buffer->data);
+  mrb_free(mrb, buffer);
 }
 
-static const struct mrb_data_type mrb_mem_type = {
-  "Mem", mrb_mem_free
+static const struct mrb_data_type mrb_buffer_type = {
+  "Buffer", mrb_buffer_free
 };
 
 MRB_API mrb_value
-mrb_mem_support_float(mrb_state *mrb, mrb_value self)
+mrb_buffer_support_float(mrb_state *mrb, mrb_value self)
 {
 #ifdef MRB_WITHOUT_FLOAT
   return mrb_false_value();
@@ -32,35 +32,35 @@ mrb_mem_support_float(mrb_state *mrb, mrb_value self)
 }
 
 mrb_value
-mrb_mem_alloc(mrb_state *mrb, mrb_value self, mrb_int type_no, mrb_value mrb_shape, mrb_int dim)
+mrb_buffer_alloc(mrb_state *mrb, mrb_value self, mrb_int type_no, mrb_value mrb_shape, mrb_int dim)
 {
-  mrb_mem *mem;
+  mrb_buffer *buffer;
   mrb_int i;
 
-  mem = mrb_malloc(mrb, sizeof(mrb_mem));
-  mem->shape = NULL;
-  mem->data = NULL;
-  mem->dim = dim;
-  mem->type = type_no;
+  buffer = mrb_malloc(mrb, sizeof(mrb_buffer));
+  buffer->shape = NULL;
+  buffer->data = NULL;
+  buffer->dim = dim;
+  buffer->type = type_no;
 
-  DATA_TYPE(self) = &mrb_mem_type;
-  DATA_PTR(self) = mem;
+  DATA_TYPE(self) = &mrb_buffer_type;
+  DATA_PTR(self) = buffer;
 
-  mem->shape = mrb_malloc(mrb, sizeof(uint32_t) * mem->dim);
-  mem->size = 1;
+  buffer->shape = mrb_malloc(mrb, sizeof(uint32_t) * buffer->dim);
+  buffer->size = 1;
   
-  for( i = 0; i < mem->dim; i++ ) {
-    mem->shape[i] = mrb_fixnum(mrb_ary_ref(mrb, mrb_shape, i));
-    mem->size *= mem->shape[i];
+  for( i = 0; i < buffer->dim; i++ ) {
+    buffer->shape[i] = mrb_fixnum(mrb_ary_ref(mrb, mrb_shape, i));
+    buffer->size *= buffer->shape[i];
   }
 
-  mem->data = mrb_malloc(mrb, mem->size * mem_type_size[mem->type]);
+  buffer->data = mrb_malloc(mrb, buffer->size * buffer_type_size[buffer->type]);
 
   return self;
 }
 
 MRB_API mrb_value
-mrb_mem_initialize(mrb_state *mrb, mrb_value self)
+mrb_buffer_initialize(mrb_state *mrb, mrb_value self)
 {
   mrb_value mrb_arg, mrb_shape, shape_val;
   mrb_int shape_len, type_no, i;
@@ -70,13 +70,13 @@ mrb_mem_initialize(mrb_state *mrb, mrb_value self)
 
   mrb_int class_num = sizeof(sub_class_list) / sizeof(sub_class_list[0]);
   for( type_no = 0; type_no < class_num; type_no++) {
-    if( strcmp(class_name + strlen("Mem::"), sub_class_list[type_no]) == 0 ){
+    if( strcmp(class_name + strlen("Buffer::"), sub_class_list[type_no]) == 0 ){
       break;
     }
   }
 
   if( type_no >= class_num ) {
-    mrb_raise(mrb, mrb_exc_get(mrb, "StandardError"), "Cannot create an instance, only can create Mem sub class instance");
+    mrb_raise(mrb, mrb_exc_get(mrb, "StandardError"), "Cannot create an instance, only can create Buffer sub class instance");
   }
 
   mrb_get_args(mrb, "o", &mrb_arg);
@@ -100,13 +100,13 @@ mrb_mem_initialize(mrb_state *mrb, mrb_value self)
     mrb_raisef( mrb, E_ARGUMENT_ERROR, "invalid shape");
   }
 
-  return mrb_mem_alloc(mrb, self, type_no, mrb_shape, shape_len);
+  return mrb_buffer_alloc(mrb, self, type_no, mrb_shape, shape_len);
 }
 
 MRB_API mrb_value
-mrb_mem_init_copy(mrb_state *mrb, mrb_value copy)
+mrb_buffer_init_copy(mrb_state *mrb, mrb_value copy)
 {
-  mrb_mem *mem;
+  mrb_buffer *buffer;
   mrb_value src;
   uint32_t *src_shape_ptr, *dst_shape_ptr;
   uint8_t *src_data_ptr;
@@ -122,31 +122,31 @@ mrb_mem_init_copy(mrb_state *mrb, mrb_value copy)
   }
 
   if(!DATA_PTR(copy)) {
-    mem = mrb_malloc(mrb, sizeof(mrb_mem));
-    mem->shape = NULL;
-    mem->data = NULL;
+    buffer = mrb_malloc(mrb, sizeof(mrb_buffer));
+    buffer->shape = NULL;
+    buffer->data = NULL;
 
-    DATA_TYPE(copy) = &mrb_mem_type;
-    DATA_PTR(copy) = mem;
+    DATA_TYPE(copy) = &mrb_buffer_type;
+    DATA_PTR(copy) = buffer;
 
-    mem->type = ((mrb_mem*)DATA_PTR(src))->type;
-    mem->dim = ((mrb_mem*)DATA_PTR(src))->dim;
+    buffer->type = ((mrb_buffer*)DATA_PTR(src))->type;
+    buffer->dim = ((mrb_buffer*)DATA_PTR(src))->dim;
 
-    mem->shape = mrb_malloc(mrb, sizeof(uint32_t) * mem->dim);
+    buffer->shape = mrb_malloc(mrb, sizeof(uint32_t) * buffer->dim);
     
-    src_shape_ptr = ((mrb_mem*)DATA_PTR(src))->shape;
-    dst_shape_ptr = mem->shape;
-    for( i = 0; i < mem->dim; i++ ) {
+    src_shape_ptr = ((mrb_buffer*)DATA_PTR(src))->shape;
+    dst_shape_ptr = buffer->shape;
+    for( i = 0; i < buffer->dim; i++ ) {
       *dst_shape_ptr++ = *src_shape_ptr++;
     }
 
-    mem->size = ((mrb_mem*)DATA_PTR(src))->size;
-    mem->data = mrb_malloc(mrb, mem->size * mem_type_size[mem->type]);
+    buffer->size = ((mrb_buffer*)DATA_PTR(src))->size;
+    buffer->data = mrb_malloc(mrb, buffer->size * buffer_type_size[buffer->type]);
 
-    src_data_ptr = ((mrb_mem *)DATA_PTR(src))->data;
-    dst_data_ptr = mem->data;
+    src_data_ptr = ((mrb_buffer *)DATA_PTR(src))->data;
+    dst_data_ptr = buffer->data;
 
-    for( i = 0; i < (mem->size * mem_type_size[mem->type]); i++ ){
+    for( i = 0; i < (buffer->size * buffer_type_size[buffer->type]); i++ ){
       *dst_data_ptr++ = *src_data_ptr++;
     }
   }
@@ -155,29 +155,29 @@ mrb_mem_init_copy(mrb_state *mrb, mrb_value copy)
 }
 
 MRB_API mrb_value
-mrb_mem_get_type_no(mrb_state *mrb, mrb_value self)
+mrb_buffer_get_type_no(mrb_state *mrb, mrb_value self)
 {
-  return mrb_fixnum_value(((mrb_mem *)DATA_PTR(self))->type);
+  return mrb_fixnum_value(((mrb_buffer *)DATA_PTR(self))->type);
 }
 
 MRB_API mrb_value
-mrb_mem_get_dim(mrb_state *mrb, mrb_value self)
+mrb_buffer_get_dim(mrb_state *mrb, mrb_value self)
 {
-  return mrb_fixnum_value(((mrb_mem *)DATA_PTR(self))->dim);
+  return mrb_fixnum_value(((mrb_buffer *)DATA_PTR(self))->dim);
 }
 
 MRB_API mrb_value
-mrb_mem_get_size(mrb_state *mrb, mrb_value self)
+mrb_buffer_get_size(mrb_state *mrb, mrb_value self)
 {
-  return mrb_fixnum_value(((mrb_mem *)DATA_PTR(self))->size);
+  return mrb_fixnum_value(((mrb_buffer *)DATA_PTR(self))->size);
 }
 
 MRB_API mrb_value
-mrb_mem_get_shape(mrb_state *mrb, mrb_value self)
+mrb_buffer_get_shape(mrb_state *mrb, mrb_value self)
 {
   mrb_value ary;
-  uint32_t dim = ((mrb_mem *)DATA_PTR(self))->dim;
-  uint32_t *shape = ((mrb_mem *)DATA_PTR(self))->shape; 
+  uint32_t dim = ((mrb_buffer *)DATA_PTR(self))->dim;
+  uint32_t *shape = ((mrb_buffer *)DATA_PTR(self))->shape;
   uint32_t i;
 
   ary = mrb_ary_new_capa(mrb, dim);
@@ -188,29 +188,29 @@ mrb_mem_get_shape(mrb_state *mrb, mrb_value self)
   return ary;
 }
 
-static uint8_t* mrb_mem_at(mrb_state *mrb, mrb_value self, mrb_value *mrb_elm, uint32_t elm_num)
+static uint8_t* mrb_buffer_at(mrb_state *mrb, mrb_value self, mrb_value *mrb_elm, uint32_t elm_num)
 {
   uint32_t dim, size, type;
   uint32_t *shape;
   uint32_t pos = 0;
-  mrb_mem *mem= DATA_PTR(self);
+  mrb_buffer *buffer= DATA_PTR(self);
 
-  if( elm_num != mem->dim ){
+  if( elm_num != buffer->dim ){
     mrb_raise(mrb, E_ARGUMENT_ERROR, "invalid dim number");
   }
 
-  shape = mem->shape;
-  size = mem->size;
+  shape = buffer->shape;
+  size = buffer->size;
 
-  for( dim = 0; dim < (mem->dim); dim++ ){
+  for( dim = 0; dim < (buffer->dim); dim++ ){
     size /= *(shape++);
 
     if(mrb_fixnum_p(*mrb_elm)) {
-      if( mrb_fixnum(*mrb_elm) < (mem->shape[dim]) ) {
+      if( mrb_fixnum(*mrb_elm) < (buffer->shape[dim]) ) {
         pos += mrb_fixnum(*mrb_elm) * size;
       }
       else {
-        mrb_raisef(mrb, E_ARGUMENT_ERROR, "dim[%d] size %d is must under %d", dim, mrb_fixnum(*mrb_elm), mem->shape[dim]);
+        mrb_raisef(mrb, E_ARGUMENT_ERROR, "dim[%d] size %d is must under %d", dim, mrb_fixnum(*mrb_elm), buffer->shape[dim]);
       }
     }
     else{
@@ -219,14 +219,14 @@ static uint8_t* mrb_mem_at(mrb_state *mrb, mrb_value self, mrb_value *mrb_elm, u
     mrb_elm++;
   }
 
-  type = ((mrb_mem *)DATA_PTR(self))->type;
+  type = ((mrb_buffer *)DATA_PTR(self))->type;
 
-  pos *= mem_type_size[type];
-  return ((mrb_mem *)DATA_PTR(self))->data + pos;
+  pos *= buffer_type_size[type];
+  return ((mrb_buffer *)DATA_PTR(self))->data + pos;
 }
 
 MRB_API mrb_value
-mrb_mem_get_value(mrb_state *mrb, mrb_value self)
+mrb_buffer_get_value(mrb_state *mrb, mrb_value self)
 {
   mrb_value *mrb_elm;
   uint32_t type,elm_num;
@@ -234,58 +234,58 @@ mrb_mem_get_value(mrb_state *mrb, mrb_value self)
 
   mrb_get_args(mrb, "*", &mrb_elm, &elm_num);
 
-  type = ((mrb_mem *)DATA_PTR(self))->type;
-  data = mrb_mem_at(mrb, self, mrb_elm, elm_num);
+  type = ((mrb_buffer *)DATA_PTR(self))->type;
+  data = mrb_buffer_at(mrb, self, mrb_elm, elm_num);
 
   switch(type) {
-    case mem_type_uint8:    return mrb_fixnum_value( *(uint8_t *)data );
-    case mem_type_int8:     return mrb_fixnum_value( *(int8_t *)data );
-    case mem_type_uint16:   return mrb_fixnum_value( *(uint16_t *)data );
-    case mem_type_int16_t:  return mrb_fixnum_value( *(int16_t *)data );
-    case mem_type_uint32_t: return mrb_fixnum_value( *(uint32_t *)data );
-    case mem_type_int32_t:  return mrb_fixnum_value( *(int32_t *)data );
-    case mem_type_uint64_t: return mrb_fixnum_value( *(uint64_t *)data );
-    case mem_type_int64_t:  return mrb_fixnum_value( *(int64_t *)data );
+    case buffer_type_uint8:    return mrb_fixnum_value( *(uint8_t *)data );
+    case buffer_type_int8:     return mrb_fixnum_value( *(int8_t *)data );
+    case buffer_type_uint16:   return mrb_fixnum_value( *(uint16_t *)data );
+    case buffer_type_int16_t:  return mrb_fixnum_value( *(int16_t *)data );
+    case buffer_type_uint32_t: return mrb_fixnum_value( *(uint32_t *)data );
+    case buffer_type_int32_t:  return mrb_fixnum_value( *(int32_t *)data );
+    case buffer_type_uint64_t: return mrb_fixnum_value( *(uint64_t *)data );
+    case buffer_type_int64_t:  return mrb_fixnum_value( *(int64_t *)data );
 #ifndef MRB_WITHOUT_FLOAT
-    case mem_type_float:    return mrb_float_value( mrb, *(float *)data );
-    case mem_type_double:   return mrb_float_value( mrb, *(double *)data );
+    case buffer_type_float:    return mrb_float_value( mrb, *(float *)data );
+    case buffer_type_double:   return mrb_float_value( mrb, *(double *)data );
 #endif
     default:                mrb_raisef(mrb, E_ARGUMENT_ERROR, "unexpected type %d at get", type);
   }
 }
 
 #ifndef MRB_WITHOUT_FLOAT
-#define mrb_mem_set_val(data,type,val) do { \
+#define mrb_buffer_set_val(data,type,val) do { \
   if( mrb_fixnum_p(val) ) *(type *)data = mrb_fixnum(val); else \
   if( mrb_float_p(val) )  *(type *)data = mrb_float(val);  \
 } while(0)
 #else
-#define mrb_mem_set_val(data,type,val) do { \
+#define mrb_buffer_set_val(data,type,val) do { \
   if( mrb_fixnum_p(val) ) *(type *)data = mrb_fixnum(val); \
 } while(0)
 #endif
 
-static void mrb_mem_set_val_each_type(mrb_state *mrb, uint8_t *data, uint32_t type, mrb_value val)
+static void mrb_buffer_set_val_each_type(mrb_state *mrb, uint8_t *data, uint32_t type, mrb_value val)
 {
   switch(type) {
-    case mem_type_uint8:    mrb_mem_set_val(data, uint8_t,  val); break;
-    case mem_type_int8:     mrb_mem_set_val(data, int8_t,   val); break;
-    case mem_type_uint16:   mrb_mem_set_val(data, uint16_t, val); break;
-    case mem_type_int16_t:  mrb_mem_set_val(data, int16_t,  val); break;
-    case mem_type_uint32_t: mrb_mem_set_val(data, uint32_t, val); break;
-    case mem_type_int32_t:  mrb_mem_set_val(data, int32_t,  val); break;
-    case mem_type_uint64_t: mrb_mem_set_val(data, uint64_t, val); break;
-    case mem_type_int64_t:  mrb_mem_set_val(data, int64_t,  val); break;
+    case buffer_type_uint8:    mrb_buffer_set_val(data, uint8_t,  val); break;
+    case buffer_type_int8:     mrb_buffer_set_val(data, int8_t,   val); break;
+    case buffer_type_uint16:   mrb_buffer_set_val(data, uint16_t, val); break;
+    case buffer_type_int16_t:  mrb_buffer_set_val(data, int16_t,  val); break;
+    case buffer_type_uint32_t: mrb_buffer_set_val(data, uint32_t, val); break;
+    case buffer_type_int32_t:  mrb_buffer_set_val(data, int32_t,  val); break;
+    case buffer_type_uint64_t: mrb_buffer_set_val(data, uint64_t, val); break;
+    case buffer_type_int64_t:  mrb_buffer_set_val(data, int64_t,  val); break;
 #ifndef MRB_WITHOUT_FLOAT
-    case mem_type_float:    mrb_mem_set_val(data, float,    val); break;
-    case mem_type_double:   mrb_mem_set_val(data, double,   val); break;
+    case buffer_type_float:    mrb_buffer_set_val(data, float,    val); break;
+    case buffer_type_double:   mrb_buffer_set_val(data, double,   val); break;
 #endif
     default:                mrb_raisef(mrb, E_ARGUMENT_ERROR, "unexpected type %d at set", type);
   }
 }
 
 MRB_API mrb_value
-mrb_mem_set_value(mrb_state *mrb, mrb_value self)
+mrb_buffer_set_value(mrb_state *mrb, mrb_value self)
 {
   mrb_value *mrb_elm;
   uint32_t type,elm_num;
@@ -293,8 +293,8 @@ mrb_mem_set_value(mrb_state *mrb, mrb_value self)
 
   mrb_get_args(mrb, "*", &mrb_elm, &elm_num);
 
-  type = ((mrb_mem *)DATA_PTR(self))->type;
-  data = mrb_mem_at(mrb, self, mrb_elm, elm_num-1);
+  type = ((mrb_buffer *)DATA_PTR(self))->type;
+  data = mrb_buffer_at(mrb, self, mrb_elm, elm_num-1);
   mrb_elm = mrb_elm + elm_num - 1;
 
 #ifndef MRB_WITHOUT_FLOAT
@@ -307,13 +307,13 @@ mrb_mem_set_value(mrb_state *mrb, mrb_value self)
   }
 #endif
 
-  mrb_mem_set_val_each_type(mrb, data, type, *mrb_elm);
+  mrb_buffer_set_val_each_type(mrb, data, type, *mrb_elm);
 
   return *mrb_elm; 
 }
 
 MRB_API mrb_value
-mrb_mem_fill_value(mrb_state *mrb, mrb_value self)
+mrb_buffer_fill_value(mrb_state *mrb, mrb_value self)
 {
   mrb_value mrb_val;
   uint32_t type,size,i;
@@ -321,46 +321,46 @@ mrb_mem_fill_value(mrb_state *mrb, mrb_value self)
 
   mrb_get_args(mrb, "o", &mrb_val);
 
-  data = ((mrb_mem *)DATA_PTR(self))->data;
-  type = ((mrb_mem *)DATA_PTR(self))->type;
-  size = ((mrb_mem *)DATA_PTR(self))->size;
+  data = ((mrb_buffer *)DATA_PTR(self))->data;
+  type = ((mrb_buffer *)DATA_PTR(self))->type;
+  size = ((mrb_buffer *)DATA_PTR(self))->size;
   
   for(i = 0; i < size; i++){
-    mrb_mem_set_val_each_type(mrb, data, type, mrb_val);
-    data += mem_type_size[type];
+    mrb_buffer_set_val_each_type(mrb, data, type, mrb_val);
+    data += buffer_type_size[type];
   }
 
   return mrb_val; 
 }
 
-void mrb_mruby_mem_gem_init(mrb_state *mrb)
+void mrb_mruby_buffer_gem_init(mrb_state *mrb)
 {
   mrb_int i;
   mrb_int class_num = sizeof(sub_class_list) / sizeof(sub_class_list[0]);
 
-  struct RClass *cls = mrb_define_class(mrb, "Mem", mrb->object_class);
+  struct RClass *cls = mrb_define_class(mrb, "Buffer", mrb->object_class);
 
-  mrb_define_class_method(mrb, cls, "support_float?", mrb_mem_support_float, MRB_ARGS_NONE());
+  mrb_define_class_method(mrb, cls, "support_float?", mrb_buffer_support_float, MRB_ARGS_NONE());
 
   MRB_SET_INSTANCE_TT(cls, MRB_TT_DATA);
 
-  mrb_define_method(mrb, cls, "initialize", mrb_mem_initialize, MRB_ARGS_REQ(1));
-  mrb_define_method(mrb, cls, "initialize_copy", mrb_mem_init_copy, MRB_ARGS_REQ(1));
+  mrb_define_method(mrb, cls, "initialize", mrb_buffer_initialize, MRB_ARGS_REQ(1));
+  mrb_define_method(mrb, cls, "initialize_copy", mrb_buffer_init_copy, MRB_ARGS_REQ(1));
 
-  mrb_define_method(mrb, cls, "dim", mrb_mem_get_dim, MRB_ARGS_NONE());
-  mrb_define_method(mrb, cls, "size", mrb_mem_get_size, MRB_ARGS_NONE());
-  mrb_define_method(mrb, cls, "shape", mrb_mem_get_shape, MRB_ARGS_NONE());
+  mrb_define_method(mrb, cls, "dim", mrb_buffer_get_dim, MRB_ARGS_NONE());
+  mrb_define_method(mrb, cls, "size", mrb_buffer_get_size, MRB_ARGS_NONE());
+  mrb_define_method(mrb, cls, "shape", mrb_buffer_get_shape, MRB_ARGS_NONE());
 
-  mrb_define_method(mrb, cls, "fill", mrb_mem_fill_value, MRB_ARGS_REQ(1));
-  mrb_define_method(mrb, cls, "[]", mrb_mem_get_value, MRB_ARGS_ANY());
-  mrb_define_method(mrb, cls, "[]=", mrb_mem_set_value, MRB_ARGS_ANY());
+  mrb_define_method(mrb, cls, "fill", mrb_buffer_fill_value, MRB_ARGS_REQ(1));
+  mrb_define_method(mrb, cls, "[]", mrb_buffer_get_value, MRB_ARGS_ANY());
+  mrb_define_method(mrb, cls, "[]=", mrb_buffer_set_value, MRB_ARGS_ANY());
 
   for( i = 0; i < class_num; i++) {
     mrb_define_class_under(mrb, cls, sub_class_list[i], cls);
   }
 }
 
-void mrb_mruby_mem_gem_final(mrb_state *mrb)
+void mrb_mruby_buffer_gem_final(mrb_state *mrb)
 {
   // nothing to do.
 }
