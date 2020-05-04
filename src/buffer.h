@@ -6,7 +6,7 @@ typedef struct {
   uint8_t *data;
 } mrb_buffer;
 
-static const char *buffer_sub_class_list[] = {
+static const char *buffer_sub_class_name_list[] = {
   "Uint8",
   "Int8",
   "Uint16",
