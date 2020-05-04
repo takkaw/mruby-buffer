@@ -79,9 +79,6 @@ mrb_buffer_initialize(mrb_state *mrb, mrb_value self)
 {
   mrb_value mrb_arg, mrb_shape, shape_val;
   mrb_int shape_len, type_no, i;
-  const char* class_name;
-
-  class_name = mrb_obj_classname(mrb, self);
 
   mrb_int class_num = sizeof(buffer_sub_class_name_list) / sizeof(buffer_sub_class_name_list[0]);
   for( type_no = 0; type_no < class_num; type_no++) {
