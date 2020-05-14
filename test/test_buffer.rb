@@ -1,3 +1,7 @@
+assert("Buffer.allocate") do
+  assert_nothing_raised { Buffer::Uint8.allocate }
+end
+
 assert("Buffer#new") do
   assert_raise { Buffer.new 100 }
   assert_nothing_raised { Buffer::Int32.new 100 }

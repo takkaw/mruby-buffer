@@ -1,8 +1,8 @@
 typedef struct {
-  uint32_t type;
   uint32_t dim;
   uint32_t *shape;
   uint32_t size;
+  int8_t type;
   uint8_t *data;
 } mrb_buffer;
 

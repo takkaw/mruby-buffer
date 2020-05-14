@@ -47,36 +47,34 @@ mrb_buffer_support_float(mrb_state *mrb, mrb_value self)
 }
 
 mrb_value
-mrb_buffer_alloc(mrb_state *mrb, mrb_value self, mrb_int type_no, mrb_value mrb_shape, mrb_int dim)
+mrb_buffer_allocate(mrb_state *mrb, mrb_value cv)
 {
+  struct RClass *cls;
+  struct RObject *o;
+  mrb_value obj;
   mrb_buffer *buffer;
-  mrb_int i;
+
+  cls = mrb_class_ptr(cv);
+  o = (struct RObject*)mrb_obj_alloc(mrb, MRB_TT_DATA, cls);
+  obj = mrb_obj_value(o);
 
   buffer = mrb_malloc(mrb, sizeof(mrb_buffer));
+  DATA_TYPE(obj) = &mrb_buffer_type;
+  DATA_PTR(obj) = buffer;
+
+  buffer->dim = 0;
   buffer->shape = NULL;
+  buffer->size = 0;
+  buffer->type = -1;
   buffer->data = NULL;
-  buffer->dim = dim;
-  buffer->type = type_no;
 
-  DATA_TYPE(self) = &mrb_buffer_type;
-  DATA_PTR(self) = buffer;
-
-  buffer->shape = mrb_malloc(mrb, sizeof(uint32_t) * buffer->dim);
-  buffer->size = 1;
-  
-  for( i = 0; i < buffer->dim; i++ ) {
-    buffer->shape[i] = mrb_fixnum(mrb_ary_ref(mrb, mrb_shape, i));
-    buffer->size *= buffer->shape[i];
-  }
-
-  buffer->data = mrb_malloc(mrb, buffer->size * buffer_type_size[buffer->type]);
-
-  return self;
+  return obj;
 }
 
 MRB_API mrb_value
 mrb_buffer_initialize(mrb_state *mrb, mrb_value self)
 {
+  mrb_buffer *buffer;
   mrb_value mrb_arg, mrb_shape, shape_val;
   mrb_int shape_len, type_no, i;
 
@@ -112,7 +110,22 @@ mrb_buffer_initialize(mrb_state *mrb, mrb_value self)
     mrb_raisef( mrb, E_ARGUMENT_ERROR, "invalid shape");
   }
 
-  return mrb_buffer_alloc(mrb, self, type_no, mrb_shape, shape_len);
+  buffer = DATA_PTR(self);
+  buffer->dim = shape_len;
+  buffer->type = type_no;
+  buffer->shape = mrb_malloc(mrb, sizeof(uint32_t) * buffer->dim);
+
+  buffer->size = 1;
+  for( i = 0; i < buffer->dim; i++ ) {
+    buffer->shape[i] = mrb_fixnum(mrb_ary_ref(mrb, mrb_shape, i));
+    buffer->size *= buffer->shape[i];
+  }
+
+  if( buffer->size != 0 ) {
+    buffer->data = mrb_malloc(mrb, buffer->size * buffer_type_size[buffer->type]);
+  }
+
+  return self;
 }
 
 MRB_API mrb_value
@@ -347,10 +360,14 @@ mrb_buffer_fill_value(mrb_state *mrb, mrb_value self)
 
 void mrb_mruby_buffer_gem_init(mrb_state *mrb)
 {
+  struct RClass *cls;
   mrb_int i;
   mrb_int class_num = sizeof(buffer_sub_class_name_list) / sizeof(buffer_sub_class_name_list[0]);
 
-  struct RClass *cls = mrb_define_class(mrb, "Buffer", mrb->object_class);
+  cls = mrb_class_get(mrb,"Class");
+  mrb_define_method(mrb, cls, "allocate", mrb_buffer_allocate, MRB_ARGS_ANY());
+
+  cls = mrb_define_class(mrb, "Buffer", mrb->object_class);
 
   mrb_define_class_method(mrb, cls, "support_float?", mrb_buffer_support_float, MRB_ARGS_NONE());
 
