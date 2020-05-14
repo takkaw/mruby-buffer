@@ -23,6 +23,14 @@ assert("Buffer#new") do
   assert_nothing_raised { Buffer::Double.new [1,2,3] }
 end
 
+assert("Buffer#initialize") do
+  buffer = Buffer::Int32.new 100
+  assert_raise { Buffer.initialize 100 }
+
+  buffer = Buffer::Int32.allocate
+  assert_nothing_raised { buffer.initialize 100 }
+end
+
 assert("Buffer#inspect") do
   buffer = Buffer::Int32.new 100
   assert_kind_of String, buffer.inspect
