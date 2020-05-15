@@ -1,5 +1,9 @@
 assert("Buffer.allocate") do
   assert_nothing_raised { Buffer::Uint32.allocate }
+  buffer = Buffer::Uint32.allocate
+  assert_nothing_raised { buffer.inspect }
+  assert_raise { buffer[0] }
+  assert_raise { buffer[0] = 0 }
 end
 
 assert("Buffer#new") do

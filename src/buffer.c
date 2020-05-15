@@ -206,7 +206,8 @@ mrb_buffer_get_shape(mrb_state *mrb, mrb_value self)
 
 static uint8_t* mrb_buffer_at(mrb_state *mrb, mrb_value self, mrb_value *mrb_elm, uint32_t elm_num)
 {
-  uint32_t dim, size, type;
+  int8_t type;
+  uint32_t dim, size;
   uint32_t *shape;
   uint32_t pos = 0;
   mrb_buffer *buffer= DATA_PTR(self);
@@ -244,16 +245,25 @@ static uint8_t* mrb_buffer_at(mrb_state *mrb, mrb_value self, mrb_value *mrb_elm
   return ((mrb_buffer *)DATA_PTR(self))->data + pos;
 }
 
+static void mrb_buffer_check_initialized(mrb_state *mrb, int8_t type)
+{
+   if( type == -1 ) {
+     mrb_raise( mrb, E_RUNTIME_ERROR, "not initialized");
+   }
+}
+
 MRB_API mrb_value
 mrb_buffer_get_value(mrb_state *mrb, mrb_value self)
 {
   mrb_value *mrb_elm;
-  uint32_t type,elm_num;
+  int8_t type;
+  uint32_t elm_num;
   uint8_t *data;
 
   mrb_get_args(mrb, "*", &mrb_elm, &elm_num);
 
   type = ((mrb_buffer *)DATA_PTR(self))->type;
+  mrb_buffer_check_initialized(mrb, type);
   data = mrb_buffer_at(mrb, self, mrb_elm, elm_num);
 
   switch(type) {
@@ -307,12 +317,14 @@ MRB_API mrb_value
 mrb_buffer_set_value(mrb_state *mrb, mrb_value self)
 {
   mrb_value *mrb_elm;
-  uint32_t type,elm_num;
+  int8_t type;
+  uint32_t elm_num;
   uint8_t *data;
 
   mrb_get_args(mrb, "*", &mrb_elm, &elm_num);
 
   type = ((mrb_buffer *)DATA_PTR(self))->type;
+  mrb_buffer_check_initialized(mrb, type);
   data = mrb_buffer_at(mrb, self, mrb_elm, elm_num-1);
   mrb_elm = mrb_elm + elm_num - 1;
 
@@ -335,7 +347,8 @@ MRB_API mrb_value
 mrb_buffer_fill_value(mrb_state *mrb, mrb_value self)
 {
   mrb_value mrb_val;
-  uint32_t type,size,i;
+  int8_t type;
+  uint32_t size,i;
   uint8_t *data;
 
   mrb_get_args(mrb, "o", &mrb_val);
