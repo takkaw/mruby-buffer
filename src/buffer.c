@@ -75,8 +75,8 @@ MRB_API mrb_value
 mrb_buffer_initialize(mrb_state *mrb, mrb_value self)
 {
   mrb_buffer *buffer;
-  mrb_value mrb_arg, mrb_shape, shape_val;
-  mrb_int shape_len, type_no, i;
+  mrb_value *mrb_arg;
+  mrb_int type_no, arg_len, i;
 
   mrb_int class_num = sizeof(buffer_sub_class_name_list) / sizeof(buffer_sub_class_name_list[0]);
   for( type_no = 0; type_no < class_num; type_no++) {
@@ -89,25 +89,12 @@ mrb_buffer_initialize(mrb_state *mrb, mrb_value self)
     mrb_raise(mrb, mrb_exc_get(mrb, "StandardError"), "Cannot create an instance, only can create Buffer sub class instance");
   }
 
-  mrb_get_args(mrb, "o", &mrb_arg);
-
-  if( mrb_fixnum_p(mrb_arg) ){
-    shape_len = 1;
-    mrb_shape = mrb_ary_new_capa(mrb, 1);
-    mrb_ary_set(mrb, mrb_shape, 0, mrb_arg);
-  }
-  else if( mrb_array_p(mrb_arg) ) {
-    mrb_shape = mrb_arg;
-    shape_len = RARRAY_LEN(mrb_shape);
-    for( i = 0; i < shape_len; i++) {
-      shape_val = mrb_ary_ref(mrb, mrb_shape, i);
-      if( !mrb_fixnum_p( shape_val ) ) {
-        mrb_raisef( mrb, E_ARGUMENT_ERROR, "invalid shape");
-      }
+  mrb_get_args(mrb, "*", &mrb_arg, &arg_len);
+  
+  for( i = 0; i < arg_len; i++ ) {
+    if( !mrb_fixnum_p(mrb_arg[i]) ) {
+      mrb_raisef( mrb, E_ARGUMENT_ERROR, "invalid shape");
     }
-  }
-  else {
-    mrb_raisef( mrb, E_ARGUMENT_ERROR, "invalid shape");
   }
 
   buffer = DATA_PTR(self);
@@ -116,13 +103,13 @@ mrb_buffer_initialize(mrb_state *mrb, mrb_value self)
     mrb_raise( mrb, E_RUNTIME_ERROR, "already initialized");
   }
 
-  buffer->dim = shape_len;
+  buffer->dim = arg_len;
   buffer->type = type_no;
-  buffer->shape = mrb_malloc(mrb, sizeof(uint32_t) * buffer->dim);
+  buffer->shape = arg_len ? mrb_malloc(mrb, sizeof(uint32_t) * buffer->dim) : NULL;
   buffer->size = 1;
 
   for( i = 0; i < buffer->dim; i++ ) {
-    buffer->shape[i] = mrb_fixnum(mrb_ary_ref(mrb, mrb_shape, i));
+    buffer->shape[i] = mrb_fixnum(mrb_arg[i]);
     buffer->size *= buffer->shape[i];
   }
 
