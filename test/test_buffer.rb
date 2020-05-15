@@ -41,6 +41,8 @@ assert("Buffer#dim") do
   assert_equal 3, buffer.dim
   buffer2 = Buffer::Int32.new 100
   assert_equal 1, buffer2.dim
+  buffer3 = Buffer::Int32.new
+  assert_equal 0, buffer3.dim
 end
 
 assert("Buffer#size") do
@@ -48,6 +50,8 @@ assert("Buffer#size") do
   assert_equal 6, buffer.size
   buffer2 = Buffer::Int32.new 100
   assert_equal 100, buffer2.size
+  buffer3 = Buffer::Int32.new
+  assert_equal 0, buffer3.size
 end
 
 assert("Buffer#shape") do
@@ -55,6 +59,8 @@ assert("Buffer#shape") do
   assert_equal [1,2,3], buffer.shape
   buffer2 = Buffer::Int32.new 100
   assert_equal [100], buffer2.shape
+  buffer3 = Buffer::Int32.new
+  assert_equal [], buffer3.shape
 end
 
 assert("Buffer#[]") do

@@ -106,14 +106,13 @@ mrb_buffer_initialize(mrb_state *mrb, mrb_value self)
   buffer->dim = arg_len;
   buffer->type = type_no;
   buffer->shape = arg_len ? mrb_malloc(mrb, sizeof(uint32_t) * buffer->dim) : NULL;
-  buffer->size = 1;
 
-  for( i = 0; i < buffer->dim; i++ ) {
-    buffer->shape[i] = mrb_fixnum(mrb_arg[i]);
-    buffer->size *= buffer->shape[i];
-  }
-
-  if( buffer->size != 0 ) {
+  if( arg_len > 0 ) {
+    buffer->size = 1;
+    for( i = 0; i < buffer->dim; i++ ) {
+      buffer->shape[i] = mrb_fixnum(mrb_arg[i]);
+      buffer->size *= buffer->shape[i];
+    }
     buffer->data = mrb_malloc(mrb, buffer->size * buffer_type_size[buffer->type]);
   }
 
