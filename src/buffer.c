@@ -222,11 +222,14 @@ static uint8_t* mrb_buffer_at(mrb_state *mrb, mrb_value self, mrb_value *mrb_elm
     size /= *(shape++);
 
     if(mrb_fixnum_p(*mrb_elm)) {
-      if( mrb_fixnum(*mrb_elm) < (buffer->shape[dim]) ) {
-        pos += mrb_fixnum(*mrb_elm) * size;
+      if( mrb_fixnum(*mrb_elm) < 0 ) {
+        mrb_raisef(mrb, E_ARGUMENT_ERROR, "arg is must over 0");
+      }
+      else if( mrb_fixnum(*mrb_elm) >= (buffer->shape[dim]) ) {
+        mrb_raisef(mrb, E_ARGUMENT_ERROR, "arg is must under %d", buffer->shape[dim]);
       }
       else {
-        mrb_raisef(mrb, E_ARGUMENT_ERROR, "dim[%d] size %d is must under %d", dim, mrb_fixnum(*mrb_elm), buffer->shape[dim]);
+        pos += mrb_fixnum(*mrb_elm) * size;
       }
     }
     else{

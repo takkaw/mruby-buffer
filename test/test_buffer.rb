@@ -83,6 +83,10 @@ assert("Buffer#[]") do
   assert_float 555.5,  buffer3[0,0,0]
   assert_float 10000, (buffer3[0,0,1] = 10000)
   assert_float 10000,  buffer3[0,0,1]
+
+  buffer4 = Buffer::Int8.new 10
+  assert_raise { buffer4[10] }
+  assert_raise { buffer4[-1] }
 end
 
 assert("Buffer#fill") do
