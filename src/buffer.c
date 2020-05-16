@@ -294,7 +294,7 @@ mrb_buffer_get_value(mrb_state *mrb, mrb_value self)
 } while(0)
 #endif
 
-static void mrb_buffer_set_val_each_type(mrb_state *mrb, uint8_t *data, uint32_t type, mrb_value val)
+static void mrb_buffer_set_val_each_type(mrb_state *mrb, uint8_t *data, int8_t type, mrb_value val)
 {
   switch(type) {
     case buffer_type_uint8:    mrb_buffer_set_val(data, uint8_t,  val); break;
