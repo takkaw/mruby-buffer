@@ -371,11 +371,9 @@ void mrb_mruby_buffer_gem_init(mrb_state *mrb)
   mrb_int i;
   mrb_int class_num = sizeof(buffer_sub_class_name_list) / sizeof(buffer_sub_class_name_list[0]);
 
-  cls = mrb_class_get(mrb,"Class");
-  mrb_define_method(mrb, cls, "allocate", mrb_buffer_allocate, MRB_ARGS_ANY());
-
   cls = mrb_define_class(mrb, "Buffer", mrb->object_class);
 
+  mrb_define_class_method(mrb, cls, "allocate", mrb_buffer_allocate, MRB_ARGS_ANY());
   mrb_define_class_method(mrb, cls, "support_float?", mrb_buffer_support_float, MRB_ARGS_NONE());
 
   MRB_SET_INSTANCE_TT(cls, MRB_TT_DATA);
